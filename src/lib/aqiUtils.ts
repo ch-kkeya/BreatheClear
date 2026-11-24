@@ -1,4 +1,5 @@
 import type { RiskLevel, VulnerabilityId } from '../types';
+import { handleClientApiFallback } from './clientApiFallback';
 
 export interface AqiTone {
   label: string;
@@ -77,13 +78,24 @@ export const VULNERABILITY_LABELS: Record<VulnerabilityId, string> = {
  * and trigger the global non-intrusive quota banner event.
  */
 export async function apiFetchJson<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, options);
+  let response: Response;
+  try {
+    response = await fetch(url, options);
+  } catch {
+    if (url.startsWith('/api/')) {
+      return handleClientApiFallback<T>(url, options);
+    }
+    throw new Error('Network error');
+  }
   const text = await response.text();
+  const isHtml = /^\s*<(!doctype|html)/i.test(text);
+  if (url.startsWith('/api/') && (isHtml || response.status === 404 || response.status === 405)) {
+    return handleClientApiFallback<T>(url, options);
+  }
   let parsed: any = {};
   try {
     parsed = text ? JSON.parse(text) : {};
   } catch {
-    const isHtml = /^\s*<(!doctype|html)/i.test(text);
     parsed = {
       error: isHtml
         ? `Service request was blocked (HTTP ${response.status}).`

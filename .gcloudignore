@@ -1,0 +1,11 @@
+.git
+.gitignore
+node_modules/
+dist/
+build/
+coverage/
+.env*
+*.log
+README.md
+security_spec.md
+firestore.rules.test.ts
