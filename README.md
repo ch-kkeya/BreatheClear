@@ -72,6 +72,9 @@ npm run dev
 # Type-check TypeScript
 npm run lint
 
+# Run unit, domain, and Firestore security test suites
+npm test
+
 # Lint Firestore security rules
 npx eslint firestore.rules
 

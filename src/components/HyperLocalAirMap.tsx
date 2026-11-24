@@ -286,8 +286,11 @@ export const HyperLocalAirMap: React.FC<HyperLocalAirMapProps> = ({
       </section>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-red-700 shrink-0 mt-0.5" />
+        <div
+          role="alert"
+          className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3"
+        >
+          <AlertTriangle className="w-5 h-5 text-red-700 shrink-0 mt-0.5" aria-hidden="true" />
           <div className="text-sm text-red-900">
             <p className="font-semibold">Unable to load live air quality data</p>
             <p className="mt-0.5 text-red-800">{error}</p>
@@ -298,18 +301,25 @@ export const HyperLocalAirMap: React.FC<HyperLocalAirMapProps> = ({
       {/* Main Responsive 2-Column Split: 500m Interactive Map + Live AQI Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Left/Top: 500m Hyper-Local Air Quality & Smog Map */}
-        <section className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 overflow-hidden flex flex-col">
+        <section
+          aria-labelledby="map-section-heading"
+          className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 overflow-hidden flex flex-col"
+        >
           <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-base font-bold text-[#0F1D1A]">
+              <h2 id="map-section-heading" className="text-base font-bold text-[#0F1D1A]">
                 500m Hyper-Local Air &amp; Smog Map
               </h2>
               <p className="text-xs text-[#4B5E59] mt-0.5">
                 Tap anywhere on the map to sample another 500m neighborhood pocket
               </p>
             </div>
-            <div className="flex items-center gap-1 p-1 bg-[#F6F8F7] rounded-xl border border-slate-200/70">
-              <Layers className="w-3.5 h-3.5 text-[#4B5E59] ml-2 mr-1 hidden sm:block" />
+            <div
+              role="group"
+              aria-label="Map overlay layer"
+              className="flex items-center gap-1 p-1 bg-[#F6F8F7] rounded-xl border border-slate-200/70"
+            >
+              <Layers className="w-3.5 h-3.5 text-[#4B5E59] ml-2 mr-1 hidden sm:block" aria-hidden="true" />
               {(
                 [
                   { id: 'US_AQI', label: 'US AQI' },
@@ -320,6 +330,7 @@ export const HyperLocalAirMap: React.FC<HyperLocalAirMapProps> = ({
                 <button
                   key={opt.id}
                   type="button"
+                  aria-pressed={heatmapLayer === opt.id}
                   onClick={() => setHeatmapLayer(opt.id)}
                   className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
                     heatmapLayer === opt.id
@@ -418,7 +429,14 @@ export const HyperLocalAirMap: React.FC<HyperLocalAirMapProps> = ({
 
                 {/* AQI Scale Meter */}
                 <div className="mt-4">
-                  <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    role="progressbar"
+                    aria-valuenow={overview.usAqi}
+                    aria-valuemin={0}
+                    aria-valuemax={500}
+                    aria-label={`US Air Quality Index: ${overview.usAqi}, ${tone.label}`}
+                    className="h-2 w-full rounded-full bg-slate-100 overflow-hidden"
+                  >
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${tone.barClass}`}
                       style={{ width: `${Math.min(100, Math.max(6, (overview.usAqi / 200) * 100))}%` }}
@@ -524,6 +542,8 @@ export const HyperLocalAirMap: React.FC<HyperLocalAirMapProps> = ({
                     <button
                       key={slot.dateTime}
                       type="button"
+                      aria-pressed={isSelected}
+                      aria-label={`${slot.localHourLabel}: AQI ${slot.usAqi}, ${meta.label}`}
                       onClick={() => setSelectedHourIdx(idx)}
                       className={`shrink-0 w-[64px] rounded-xl p-2 flex flex-col items-center justify-between gap-1.5 border transition-all cursor-pointer ${
                         isSelected
@@ -603,6 +623,7 @@ export const HyperLocalAirMap: React.FC<HyperLocalAirMapProps> = ({
                 <button
                   key={p.code}
                   type="button"
+                  aria-expanded={isSelected}
                   onClick={() => setExpandedPollutant(isSelected ? null : p.code)}
                   className={`text-left rounded-xl p-3.5 border transition-colors cursor-pointer min-h-[84px] flex flex-col justify-between ${
                     isSelected

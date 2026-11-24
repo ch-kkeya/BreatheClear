@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useMapsLibrary } from '@vis.gl/react-google-maps';
 import { MapPin, Search, Loader2, X } from 'lucide-react';
 import { apiFetchJson } from '../lib/aqiUtils';
+import { getErrorMessage } from '../lib/airQualityDomain';
 
 export interface SelectedPlace {
   label: string;
@@ -77,9 +78,9 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
         if (!cancelled) {
           setSuggestions(res.suggestions || []);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!cancelled) {
-          const msg = String(err?.message || err);
+          const msg = getErrorMessage(err, String(err));
           if (msg.includes('RESOURCE_EXHAUSTED') || msg.includes('OVER_QUERY_LIMIT')) {
             window.dispatchEvent(new CustomEvent('gmp-quota-exceeded'));
           }
@@ -118,8 +119,8 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
           setSuggestions([]);
           onSelect({ label, lat: loc.lat(), lng: loc.lng() });
         }
-      } catch (err: any) {
-        const msg = String(err?.message || err);
+      } catch (err: unknown) {
+        const msg = getErrorMessage(err, String(err));
         if (msg.includes('RESOURCE_EXHAUSTED') || msg.includes('OVER_QUERY_LIMIT')) {
           window.dispatchEvent(new CustomEvent('gmp-quota-exceeded'));
         }
@@ -154,20 +155,27 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
       } else {
         setSearchError('No matching location found. Try a street or neighborhood name.');
       }
-    } catch (err: any) {
-      setSearchError(err?.message || 'Location search failed.');
+    } catch (err: unknown) {
+      setSearchError(getErrorMessage(err, 'Location search failed.'));
     } finally {
       setIsLoading(false);
     }
   };
 
+  const listboxId = id ? `${id}-listbox` : 'place-search-listbox';
+
   return (
     <div ref={containerRef} className="relative w-full">
       <div className="relative flex items-center">
-        <Search className="w-4 h-4 text-[#4B5E59] absolute left-3.5 pointer-events-none" />
+        <Search className="w-4 h-4 text-[#4B5E59] absolute left-3.5 pointer-events-none" aria-hidden="true" />
         <input
           id={id}
           type="text"
+          role="combobox"
+          aria-expanded={isOpen && suggestions.length > 0}
+          aria-autocomplete="list"
+          aria-controls={listboxId}
+          aria-label={placeholder}
           value={inputValue}
           onFocus={() => setIsOpen(true)}
           onChange={(e) => {
@@ -204,16 +212,20 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
       </div>
 
       {searchError && (
-        <p className="mt-1.5 text-xs text-red-700">{searchError}</p>
+        <p role="alert" className="mt-1.5 text-xs text-red-700">
+          {searchError}
+        </p>
       )}
 
       {isOpen && suggestions.length > 0 && (
         <ul
+          id={listboxId}
           role="listbox"
+          aria-label="Place suggestions"
           className="absolute z-40 mt-1.5 w-full bg-white rounded-xl border border-slate-200 shadow-lg overflow-hidden divide-y divide-slate-100"
         >
           {suggestions.slice(0, 5).map((suggestion, idx) => (
-            <li key={suggestion.placePrediction?.placeId || idx}>
+            <li key={suggestion.placePrediction?.placeId || idx} role="option" aria-selected={false}>
               <button
                 type="button"
                 onClick={() => void handleSuggestionPick(suggestion)}

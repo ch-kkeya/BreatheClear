@@ -26,6 +26,7 @@ import {
   type User,
 } from './lib/firebase';
 import { apiFetchJson } from './lib/aqiUtils';
+import { getErrorMessage } from './lib/airQualityDomain';
 import {
   DEFAULT_FAMILY_PROFILE,
   type AirQualityOverview,
@@ -162,8 +163,8 @@ export default function App() {
           body: JSON.stringify({ lat, lng, vulnerabilities }),
         });
         setOverview(data);
-      } catch (err: any) {
-        setAqError(err?.message || 'Unable to fetch air quality conditions.');
+      } catch (err: unknown) {
+        setAqError(getErrorMessage(err, 'Unable to fetch air quality conditions.'));
       } finally {
         setAqLoading(false);
       }
@@ -179,9 +180,13 @@ export default function App() {
     try {
       setAuthError(null);
       await signInWithGoogle();
-    } catch (err: any) {
-      if (err?.code !== 'auth/popup-closed-by-user') {
-        setAuthError(err?.message || 'Google Sign-In failed. Please try again.');
+    } catch (err: unknown) {
+      const code =
+        typeof err === 'object' && err !== null && 'code' in err
+          ? String((err as { code?: unknown }).code)
+          : '';
+      if (code !== 'auth/popup-closed-by-user') {
+        setAuthError(getErrorMessage(err, 'Google Sign-In failed. Please try again.'));
       }
     }
   };
@@ -254,9 +259,20 @@ export default function App() {
 
   const appContent = (
     <div className="min-h-screen flex flex-col bg-[#F6F8F7] text-[#0F1D1A]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:rounded-xl focus:bg-[#0E6B5E] focus:text-white focus:text-xs focus:font-semibold"
+      >
+        Skip to main content
+      </a>
+
       {/* Non-intrusive Demo Key Quota Banner (Tier 1 & Tier 2) */}
       {quotaExceeded && (
-        <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm">
+        <div
+          role="status"
+          aria-live="polite"
+          className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm"
+        >
           <span>
             Google Maps Platform quota reached. If you are the app owner, visit{' '}
             <a
@@ -279,17 +295,22 @@ export default function App() {
           <button
             type="button"
             onClick={() => setActiveTab('map')}
+            aria-label="BreatheClear Home - Air Map"
             className="font-display text-lg font-extrabold tracking-tight text-[#0F1D1A] whitespace-nowrap shrink-0 cursor-pointer"
           >
             BreatheClear
           </button>
 
           {/* Zone 2: 4 Clean Single-Line Text Nav Links (Desktop) */}
-          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-[#4B5E59]">
+          <nav
+            aria-label="Primary desktop navigation"
+            className="hidden md:flex items-center gap-7 text-sm font-medium text-[#4B5E59]"
+          >
             {navItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
+                aria-current={activeTab === item.id ? 'page' : undefined}
                 onClick={() => setActiveTab(item.id)}
                 className={`py-1 transition-colors whitespace-nowrap shrink-0 cursor-pointer border-b-2 ${
                   activeTab === item.id
@@ -308,10 +329,11 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => void handleSignOut()}
+                aria-label={`Sign out (${user.displayName || user.email || 'user'})`}
                 className="inline-flex items-center gap-2 min-h-[38px] px-3.5 py-1.5 rounded-xl bg-[#F6F8F7] border border-slate-200 text-xs font-semibold text-[#0F1D1A] hover:bg-slate-100 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <span className="max-w-[110px] truncate">{user.displayName || user.email}</span>
-                <LogOut className="w-3.5 h-3.5 text-[#4B5E59]" />
+                <LogOut className="w-3.5 h-3.5 text-[#4B5E59]" aria-hidden="true" />
               </button>
             ) : (
               <button
@@ -319,7 +341,7 @@ export default function App() {
                 onClick={() => void handleGoogleSignIn()}
                 className="inline-flex items-center gap-1.5 min-h-[38px] px-3.5 py-1.5 rounded-xl bg-[#0E6B5E] text-white text-xs font-semibold hover:bg-[#0A5248] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
-                <LogIn className="w-3.5 h-3.5" />
+                <LogIn className="w-3.5 h-3.5" aria-hidden="true" />
                 Sign In
               </button>
             )}
@@ -329,7 +351,10 @@ export default function App() {
 
       {authError && (
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-3">
-          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-2.5 text-xs text-red-800 flex items-center justify-between">
+          <div
+            role="alert"
+            className="rounded-xl bg-red-50 border border-red-200 px-4 py-2.5 text-xs text-red-800 flex items-center justify-between"
+          >
             <span>{authError}</span>
             <button
               type="button"
@@ -343,7 +368,11 @@ export default function App() {
       )}
 
       {/* Main Content Workspace */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 pb-24 md:pb-12">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 pb-24 md:pb-12 focus:outline-none"
+      >
         {activeTab === 'map' && (
           <HyperLocalAirMap
             profile={profile}
@@ -433,6 +462,7 @@ export default function App() {
               <button
                 key={item.id}
                 type="button"
+                aria-current={active ? 'page' : undefined}
                 onClick={() => setActiveTab(item.id)}
                 className={`min-h-[48px] flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer ${
                   active ? 'text-[#0E6B5E] font-semibold' : 'text-[#4B5E59]'
@@ -452,8 +482,14 @@ export default function App() {
 
   if (!configLoaded) {
     return (
-      <div className="min-h-screen bg-[#F6F8F7] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-[#0E6B5E] animate-spin" />
+      <div
+        role="status"
+        aria-live="polite"
+        aria-label="Loading BreatheClear configuration"
+        className="min-h-screen bg-[#F6F8F7] flex items-center justify-center"
+      >
+        <Loader2 className="w-6 h-6 text-[#0E6B5E] animate-spin" aria-hidden="true" />
+        <span className="sr-only">Loading BreatheClear...</span>
       </div>
     );
   }

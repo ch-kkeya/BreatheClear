@@ -29,6 +29,7 @@ import type {
   ScheduleItemInput,
 } from '../types';
 import { apiFetchJson, decodePolyline } from '../lib/aqiUtils';
+import { getErrorMessage } from '../lib/airQualityDomain';
 import { formatFirestoreDate } from '../lib/firebase';
 
 const MODE_LABELS: Record<'DRIVE' | 'TRANSIT' | 'BICYCLE' | 'WALK', string> = {
@@ -242,8 +243,8 @@ export const RoutineImpactPlanner: React.FC<RoutineImpactPlannerProps> = ({
       };
       setActivePlan(plan);
       setSelectedSwapId(plan.swaps[0]?.id || null);
-    } catch (err: any) {
-      setError(err?.message || 'Unable to compute route swaps right now.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Unable to compute route swaps right now.'));
     } finally {
       setIsPlanning(false);
     }
@@ -461,11 +462,12 @@ export const RoutineImpactPlanner: React.FC<RoutineImpactPlannerProps> = ({
                   className="w-full min-h-[40px] px-3 rounded-lg bg-white border border-slate-200 text-sm text-[#0F1D1A] focus:outline-none focus:border-[#0E6B5E]"
                 />
 
-                <div className="grid grid-cols-4 gap-1">
+                <div className="grid grid-cols-4 gap-1" role="group" aria-label="Select travel mode">
                   {(['DRIVE', 'TRANSIT', 'BICYCLE', 'WALK'] as const).map((mode) => (
                     <button
                       key={mode}
                       type="button"
+                      aria-pressed={item.currentMode === mode}
                       onClick={() => handleUpdateStop(item.id, { currentMode: mode })}
                       className={`min-h-[36px] rounded-lg text-[11px] font-medium flex items-center justify-center gap-1 transition-colors cursor-pointer ${
                         item.currentMode === mode
@@ -483,7 +485,10 @@ export const RoutineImpactPlanner: React.FC<RoutineImpactPlannerProps> = ({
           </div>
 
           {error && (
-            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800">
+            <div
+              role="alert"
+              className="rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800"
+            >
               {error}
             </div>
           )}
@@ -642,6 +647,7 @@ export const RoutineImpactPlanner: React.FC<RoutineImpactPlannerProps> = ({
 
                         <button
                           type="button"
+                          aria-pressed={accepted}
                           onClick={() => void handleToggleAcceptSwap(swap.id)}
                           className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer whitespace-nowrap ${
                             accepted

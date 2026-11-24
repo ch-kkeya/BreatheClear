@@ -92,9 +92,12 @@ export async function apiFetchJson<T>(url: string, options?: RequestInit): Promi
   if (url.startsWith('/api/') && (isHtml || response.status === 404 || response.status === 405)) {
     return handleClientApiFallback<T>(url, options);
   }
-  let parsed: any = {};
+  let parsed: {
+    error?: string | { status?: string };
+    quotaExceeded?: boolean;
+  } = {};
   try {
-    parsed = text ? JSON.parse(text) : {};
+    parsed = text ? (JSON.parse(text) as typeof parsed) : {};
   } catch {
     parsed = {
       error: isHtml
@@ -103,17 +106,20 @@ export async function apiFetchJson<T>(url: string, options?: RequestInit): Promi
     };
   }
 
+  const errorObj = typeof parsed.error === 'object' && parsed.error !== null ? parsed.error : null;
+  const errorStr = typeof parsed.error === 'string' ? parsed.error : '';
+
   if (
     response.status === 429 ||
-    parsed?.quotaExceeded === true ||
-    parsed?.error?.status === 'RESOURCE_EXHAUSTED' ||
-    String(parsed?.error || '').includes('RESOURCE_EXHAUSTED')
+    parsed.quotaExceeded === true ||
+    errorObj?.status === 'RESOURCE_EXHAUSTED' ||
+    errorStr.includes('RESOURCE_EXHAUSTED')
   ) {
     window.dispatchEvent(new CustomEvent('gmp-quota-exceeded'));
   }
 
   if (!response.ok) {
-    throw new Error(parsed?.error || `Request failed (${response.status})`);
+    throw new Error(errorStr || `Request failed (${response.status})`);
   }
 
   return parsed as T;

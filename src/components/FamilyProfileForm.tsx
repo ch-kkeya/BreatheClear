@@ -20,6 +20,7 @@ import type {
   WindowVentilationType,
 } from '../types';
 import { VULNERABILITY_LABELS } from '../lib/aqiUtils';
+import { getErrorMessage } from '../lib/airQualityDomain';
 import { PlaceSearchInput } from './PlaceSearchInput';
 
 interface FamilyProfileFormProps {
@@ -99,8 +100,8 @@ export const FamilyProfileForm: React.FC<FamilyProfileFormProps> = ({
           ? 'Family Profile synced to Firebase Firestore. Air Map, Room Scanner, and Routine Planner updated.'
           : 'Family Profile applied for this session. Sign in with Google to save permanently across devices.'
       );
-    } catch (err: any) {
-      setSaveError(err?.message || 'Could not save Family Profile.');
+    } catch (err: unknown) {
+      setSaveError(getErrorMessage(err, 'Could not save Family Profile.'));
     } finally {
       setIsSaving(false);
     }
@@ -191,10 +192,10 @@ export const FamilyProfileForm: React.FC<FamilyProfileFormProps> = ({
             </p>
           </div>
 
-          <div className="space-y-2.5">
-            <label className="block text-xs font-semibold text-[#4B5E59]">
+          <div className="space-y-2.5" role="group" aria-labelledby="vulnerabilities-group-label">
+            <span id="vulnerabilities-group-label" className="block text-xs font-semibold text-[#4B5E59]">
               Household Respiratory Vulnerabilities
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2">
               {VULNERABILITIES.map((vId) => {
                 const active = draft.vulnerabilities.includes(vId);
@@ -202,6 +203,7 @@ export const FamilyProfileForm: React.FC<FamilyProfileFormProps> = ({
                   <button
                     key={vId}
                     type="button"
+                    aria-pressed={active}
                     onClick={() => toggleVulnerability(vId)}
                     className={`min-h-[44px] px-3 py-2 rounded-xl border text-left text-xs font-medium flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                       active
@@ -210,7 +212,7 @@ export const FamilyProfileForm: React.FC<FamilyProfileFormProps> = ({
                     }`}
                   >
                     <span className="truncate">{VULNERABILITY_LABELS[vId]}</span>
-                    {active && <Check className="w-3.5 h-3.5 shrink-0" />}
+                    {active && <Check className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />}
                   </button>
                 );
               })}
@@ -223,16 +225,17 @@ export const FamilyProfileForm: React.FC<FamilyProfileFormProps> = ({
           {/* Commute Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-bold text-[#0F1D1A]">
-              <Car className="w-4 h-4 text-[#0E6B5E]" />
+              <Car className="w-4 h-4 text-[#0E6B5E]" aria-hidden="true" />
               <span>02. Daily Commute Baseline</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-[#4B5E59]">
+                <label htmlFor="commuteType" className="block text-xs font-semibold text-[#4B5E59]">
                   Primary Commute Mode
                 </label>
                 <select
+                  id="commuteType"
                   value={draft.commuteType}
                   onChange={(e) =>
                     setDraft({ ...draft, commuteType: e.target.value as CommuteType })
@@ -248,10 +251,11 @@ export const FamilyProfileForm: React.FC<FamilyProfileFormProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-[#4B5E59]">
+                <label htmlFor="vehicleEmissionType" className="block text-xs font-semibold text-[#4B5E59]">
                   Household Vehicle Type
                 </label>
                 <select
+                  id="vehicleEmissionType"
                   value={draft.vehicleEmissionType}
                   onChange={(e) =>
                     setDraft({
@@ -274,14 +278,17 @@ export const FamilyProfileForm: React.FC<FamilyProfileFormProps> = ({
           {/* Cooking & Ventilation Section */}
           <div className="pt-5 border-t border-slate-100 space-y-4">
             <div className="flex items-center gap-2 text-sm font-bold text-[#0F1D1A]">
-              <Flame className="w-4 h-4 text-[#0E6B5E]" />
+              <Flame className="w-4 h-4 text-[#0E6B5E]" aria-hidden="true" />
               <span>03. Home Cooking &amp; Ventilation Setup</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-[#4B5E59]">Cooking Stove</label>
+                <label htmlFor="cookingSetup" className="block text-xs font-semibold text-[#4B5E59]">
+                  Cooking Stove
+                </label>
                 <select
+                  id="cookingSetup"
                   value={draft.cookingSetup}
                   onChange={(e) =>
                     setDraft({ ...draft, cookingSetup: e.target.value as CookingSetup })
@@ -296,8 +303,11 @@ export const FamilyProfileForm: React.FC<FamilyProfileFormProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-[#4B5E59]">Range Hood</label>
+                <label htmlFor="rangeHood" className="block text-xs font-semibold text-[#4B5E59]">
+                  Range Hood
+                </label>
                 <select
+                  id="rangeHood"
                   value={draft.rangeHood}
                   onChange={(e) =>
                     setDraft({ ...draft, rangeHood: e.target.value as RangeHoodType })
@@ -311,10 +321,11 @@ export const FamilyProfileForm: React.FC<FamilyProfileFormProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-[#4B5E59]">
+                <label htmlFor="airPurifier" className="block text-xs font-semibold text-[#4B5E59]">
                   Indoor Air Purifier
                 </label>
                 <select
+                  id="airPurifier"
                   value={draft.airPurifier}
                   onChange={(e) =>
                     setDraft({ ...draft, airPurifier: e.target.value as AirPurifierType })
@@ -328,10 +339,11 @@ export const FamilyProfileForm: React.FC<FamilyProfileFormProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-[#4B5E59]">
+                <label htmlFor="windowVentilation" className="block text-xs font-semibold text-[#4B5E59]">
                   Window Exposure
                 </label>
                 <select
+                  id="windowVentilation"
                   value={draft.windowVentilation}
                   onChange={(e) =>
                     setDraft({
@@ -351,13 +363,20 @@ export const FamilyProfileForm: React.FC<FamilyProfileFormProps> = ({
           </div>
 
           {saveError && (
-            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800">
+            <div
+              role="alert"
+              className="rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800"
+            >
               {saveError}
             </div>
           )}
 
           {saveMessage && (
-            <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-900">
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-900"
+            >
               {saveMessage}
             </div>
           )}

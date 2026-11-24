@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { AirQualityOverview, FamilyProfile, RoomScanResult, RoomType } from '../types';
 import { apiFetchJson, getRiskTone, imageSourceToCompressedBase64 } from '../lib/aqiUtils';
+import { getErrorMessage } from '../lib/airQualityDomain';
 import { formatFirestoreDate } from '../lib/firebase';
 
 const SAMPLE_ROOMS = [
@@ -80,8 +81,8 @@ export const RoomIaqScanner: React.FC<RoomIaqScannerProps> = ({
       setPreviewUrl(compressed.previewUrl);
       setPendingImage({ base64: compressed.base64, mimeType: compressed.mimeType });
       setActiveScan(null);
-    } catch (err: any) {
-      setError(err?.message || 'Could not process the uploaded photo.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Could not process the uploaded photo.'));
     }
   };
 
@@ -93,8 +94,8 @@ export const RoomIaqScanner: React.FC<RoomIaqScannerProps> = ({
       setPreviewUrl(compressed.previewUrl);
       setPendingImage({ base64: compressed.base64, mimeType: compressed.mimeType });
       setActiveScan(null);
-    } catch (err: any) {
-      setError(err?.message || 'Could not load sample room image.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Could not load sample room image.'));
     }
   };
 
@@ -133,8 +134,8 @@ export const RoomIaqScanner: React.FC<RoomIaqScannerProps> = ({
         id: savedId || `local-${Date.now()}`,
         ownerId: profile.ownerId,
       });
-    } catch (err: any) {
-      setError(err?.message || 'Indoor air quality scan failed.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Indoor air quality scan failed.'));
     } finally {
       setIsAnalyzing(false);
     }
@@ -170,13 +171,16 @@ export const RoomIaqScanner: React.FC<RoomIaqScannerProps> = ({
           </div>
 
           {/* Room Type Segmented Selection */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-[#4B5E59]">Room Type</label>
+          <div className="space-y-2" role="group" aria-labelledby="room-type-group-label">
+            <span id="room-type-group-label" className="block text-xs font-semibold text-[#4B5E59]">
+              Room Type
+            </span>
             <div className="grid grid-cols-3 gap-1.5">
               {ROOM_TYPES.map((rt) => (
                 <button
                   key={rt.id}
                   type="button"
+                  aria-pressed={roomType === rt.id}
                   onClick={() => setRoomType(rt.id)}
                   className={`min-h-[40px] px-2.5 py-2 rounded-xl text-xs font-medium border transition-colors cursor-pointer whitespace-nowrap truncate ${
                     roomType === rt.id
@@ -196,6 +200,7 @@ export const RoomIaqScanner: React.FC<RoomIaqScannerProps> = ({
             type="file"
             accept="image/*"
             capture="environment"
+            aria-label="Upload room photo for indoor air quality scan"
             onChange={handleFileChange}
             className="hidden"
           />
@@ -281,7 +286,10 @@ export const RoomIaqScanner: React.FC<RoomIaqScannerProps> = ({
           </div>
 
           {error && (
-            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800">
+            <div
+              role="alert"
+              className="rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800"
+            >
               {error}
             </div>
           )}
@@ -403,6 +411,7 @@ export const RoomIaqScanner: React.FC<RoomIaqScannerProps> = ({
                         <div className="flex items-start gap-3">
                           <button
                             type="button"
+                            aria-pressed={checked}
                             onClick={() => void handleHackToggle(hack.id)}
                             aria-label={`Mark hack ${idx + 1} complete`}
                             className="mt-0.5 min-w-[28px] min-h-[28px] flex items-center justify-center text-[#0E6B5E] cursor-pointer shrink-0"
