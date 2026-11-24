@@ -659,7 +659,7 @@ async function createServer() {
       ].join('\n');
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash-lite',
+        model: 'gemini-4-hydrogen',
         contents: {
           parts: [
             {

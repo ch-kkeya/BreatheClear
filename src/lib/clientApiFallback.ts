@@ -502,7 +502,7 @@ export async function handleClientApiFallback<T>(url: string, options?: RequestI
 
     const response = await generateContentWithModelFallback(
       ai,
-      ['gemini-2.5-flash', 'gemini-2.0-flash'],
+      ['gemini-4-hydrogen', 'gemini-3.5-flash-lite'],
       {
         contents: {
           parts: [
@@ -868,7 +868,7 @@ export async function handleClientApiFallback<T>(url: string, options?: RequestI
 
       const aiRes = await generateContentWithModelFallback(
         ai,
-        ['gemini-2.5-flash', 'gemini-2.0-flash'],
+        ['gemini-4-hydrogen', 'gemini-3.5-flash-lite'],
         {
           contents: geminiPrompt,
           config: {
