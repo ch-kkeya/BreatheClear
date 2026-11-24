@@ -1,0 +1,295 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Primitive Helpers ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isVerified() && request.auth.uid == userId;
+    }
+
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidStringList(val, maxSize) {
+      return val is list && val.size() <= maxSize && (val.size() == 0 || val[0] is string);
+    }
+
+    function isValidMapList(val, maxSize) {
+      return val is list && val.size() <= maxSize && (val.size() == 0 || val[0] is map);
+    }
+
+    // --- Entity Validation Blueprints ---
+    function isValidFamilyProfile(data, userId) {
+      return data.keys().hasAll([
+        'ownerId',
+        'householdName',
+        'locationLabel',
+        'lat',
+        'lng',
+        'vulnerabilities',
+        'commuteType',
+        'vehicleEmissionType',
+        'cookingSetup',
+        'rangeHood',
+        'airPurifier',
+        'windowVentilation',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'householdName',
+        'locationLabel',
+        'lat',
+        'lng',
+        'vulnerabilities',
+        'commuteType',
+        'vehicleEmissionType',
+        'cookingSetup',
+        'rangeHood',
+        'airPurifier',
+        'windowVentilation',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId == request.auth.uid &&
+      data.ownerId == userId &&
+      isValidId(data.ownerId) &&
+      isValidString(data.householdName, 1, 80) &&
+      isValidString(data.locationLabel, 1, 200) &&
+      data.lat is number && data.lat >= -90 && data.lat <= 90 &&
+      data.lng is number && data.lng >= -180 && data.lng <= 180 &&
+      isValidStringList(data.vulnerabilities, 8) &&
+      data.commuteType in ['DRIVE', 'TRANSIT', 'BICYCLE', 'WALK', 'HYBRID'] &&
+      data.vehicleEmissionType in ['GASOLINE', 'DIESEL', 'HYBRID', 'ELECTRIC', 'NONE'] &&
+      data.cookingSetup in ['GAS_STOVE', 'INDUCTION_ELECTRIC', 'WOOD_BIOMASS', 'MIXED'] &&
+      data.rangeHood in ['VENTED_OUTDOORS', 'RECIRCULATING', 'NONE'] &&
+      data.airPurifier in ['HEPA_MAIN_ROOMS', 'SINGLE_ROOM', 'NONE'] &&
+      data.windowVentilation in ['CROSS_VENTILATION', 'SINGLE_SIDE', 'STREET_FACING', 'SEALED_HVAC'] &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidRoomScan(data, userId) {
+      return data.keys().hasAll([
+        'ownerId',
+        'roomType',
+        'overallRiskLevel',
+        'roomSummary',
+        'outdoorAqiAtScan',
+        'ventilationAdvice',
+        'detectedRisks',
+        'hacks',
+        'completedHackIds',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'roomType',
+        'overallRiskLevel',
+        'roomSummary',
+        'outdoorAqiAtScan',
+        'ventilationAdvice',
+        'detectedRisks',
+        'hacks',
+        'completedHackIds',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId == request.auth.uid &&
+      data.ownerId == userId &&
+      isValidId(data.ownerId) &&
+      data.roomType in ['KITCHEN', 'BEDROOM', 'LIVING_ROOM', 'WINDOW_BALCONY', 'KIDS_ROOM', 'HOME_OFFICE'] &&
+      data.overallRiskLevel in ['LOW', 'MODERATE', 'ELEVATED', 'HIGH'] &&
+      isValidString(data.roomSummary, 1, 600) &&
+      data.outdoorAqiAtScan is number && data.outdoorAqiAtScan >= 0 && data.outdoorAqiAtScan <= 500 &&
+      isValidString(data.ventilationAdvice, 1, 600) &&
+      isValidMapList(data.detectedRisks, 6) &&
+      isValidMapList(data.hacks, 3) &&
+      isValidStringList(data.completedHackIds, 3) &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidRoutinePlan(data, userId) {
+      return data.keys().hasAll([
+        'ownerId',
+        'planTitle',
+        'locationLabel',
+        'swaps',
+        'acceptedSwapIds',
+        'personalPm25ReductionPct',
+        'personalPm25UgSaved',
+        'communityCo2GramsSaved',
+        'communityNoxMgSaved',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'planTitle',
+        'locationLabel',
+        'swaps',
+        'acceptedSwapIds',
+        'personalPm25ReductionPct',
+        'personalPm25UgSaved',
+        'communityCo2GramsSaved',
+        'communityNoxMgSaved',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId == request.auth.uid &&
+      data.ownerId == userId &&
+      isValidId(data.ownerId) &&
+      isValidString(data.planTitle, 1, 120) &&
+      isValidString(data.locationLabel, 1, 200) &&
+      isValidMapList(data.swaps, 10) &&
+      isValidStringList(data.acceptedSwapIds, 10) &&
+      data.personalPm25ReductionPct is number && data.personalPm25ReductionPct >= 0 && data.personalPm25ReductionPct <= 100 &&
+      data.personalPm25UgSaved is number && data.personalPm25UgSaved >= 0 && data.personalPm25UgSaved <= 50000 &&
+      data.communityCo2GramsSaved is number && data.communityCo2GramsSaved >= 0 && data.communityCo2GramsSaved <= 500000 &&
+      data.communityNoxMgSaved is number && data.communityNoxMgSaved >= 0 && data.communityNoxMgSaved <= 500000 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+
+    // 1. Private Family Profile (Strict PII Isolation)
+    match /users/{userId}/profile/{profileId} {
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(profileId);
+      allow list: if false;
+
+      allow create: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidId(profileId)
+        && profileId == 'family'
+        && isValidFamilyProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidId(profileId)
+        && isValidFamilyProfile(incoming(), userId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'householdName',
+          'locationLabel',
+          'lat',
+          'lng',
+          'vulnerabilities',
+          'commuteType',
+          'vehicleEmissionType',
+          'cookingSetup',
+          'rangeHood',
+          'airPurifier',
+          'windowVentilation',
+          'updatedAt'
+        ]);
+
+      allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(profileId);
+    }
+
+    // 2. Snap-a-Room IAQ Scan History
+    match /users/{userId}/roomScans/{scanId} {
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(scanId);
+      allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidId(scanId)
+        && isValidRoomScan(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidId(scanId)
+        && isValidRoomScan(incoming(), userId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['completedHackIds', 'updatedAt']);
+
+      allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(scanId);
+    }
+
+    // 3. Daily Routine & Impact Plans
+    match /users/{userId}/routinePlans/{planId} {
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(planId);
+      allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidId(planId)
+        && isValidRoutinePlan(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidId(planId)
+        && isValidRoutinePlan(incoming(), userId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'acceptedSwapIds',
+            'personalPm25ReductionPct',
+            'personalPm25UgSaved',
+            'communityCo2GramsSaved',
+            'communityNoxMgSaved',
+            'updatedAt'
+          ]) ||
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'planTitle',
+            'locationLabel',
+            'swaps',
+            'acceptedSwapIds',
+            'personalPm25ReductionPct',
+            'personalPm25UgSaved',
+            'communityCo2GramsSaved',
+            'communityNoxMgSaved',
+            'updatedAt'
+          ])
+        );
+
+      allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(planId);
+    }
+  }
+}

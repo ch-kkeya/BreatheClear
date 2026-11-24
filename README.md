@@ -1,4 +1,4 @@
-# BreatheClear — Air Quality Assistant
+# BreatheClear — Urban Air Quality Assistant
 
 BreatheClear is a mobile-first full-stack web application that helps urban households reduce daily pollution exposure and lower community emissions. It combines live hyper-local air quality and weather telemetry, AI-powered indoor room scanning, low-emission commute planning, and Firebase-backed household profiles.
 
@@ -56,7 +56,7 @@ cp .env.example .env
 
 ### 3. Firebase Configuration
 
-Firebase client config is stored in `firebase-applet-config.json`, with the data model documented in `firebase-blueprint.json` and security rules defined in `firestore.rules`.
+Copy `firebase-applet-config.example.json` to `firebase-applet-config.json` (which is git-ignored to keep project keys out of version control) and fill in your Firebase web app config, or set `VITE_FIREBASE_*` variables in `.env`. The data model is documented in `firebase-blueprint.json` and security rules are defined in `firestore.rules`.
 
 ### 4. Run Locally
 

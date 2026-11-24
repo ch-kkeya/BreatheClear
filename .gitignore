@@ -1,0 +1,13 @@
+node_modules/
+build/
+dist/
+coverage/
+server.js
+.DS_Store
+Thumbs.db
+*.log
+.env*
+!.env.example
+firebase-applet-config.json
+!firebase-applet-config.example.json
+

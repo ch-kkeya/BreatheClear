@@ -1,0 +1,6 @@
+{
+  "name": "BreatheClear",
+  "description": "Mobile-first Urban Air Quality Assistant with live 500m hyper-local smog maps, safe ventilation windows, Gemini room IAQ scanning, and low-emission routine planning.",
+  "requestFramePermissions": ["geolocation", "camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

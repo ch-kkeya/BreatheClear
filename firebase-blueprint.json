@@ -1,0 +1,260 @@
+{
+  "entities": {
+    "FamilyProfile": {
+      "title": "FamilyProfile",
+      "description": "Household location, respiratory vulnerabilities, commute habits, and indoor cooking/ventilation configuration.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the profile owner."
+        },
+        "householdName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Display label for the household."
+        },
+        "locationLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Human-readable neighborhood or address label."
+        },
+        "lat": {
+          "type": "number",
+          "description": "Home latitude between -90 and 90."
+        },
+        "lng": {
+          "type": "number",
+          "description": "Home longitude between -180 and 180."
+        },
+        "vulnerabilities": {
+          "type": "array",
+          "description": "Bounded list (max 8) of household air quality sensitivity groups."
+        },
+        "commuteType": {
+          "type": "string",
+          "enum": ["DRIVE", "TRANSIT", "BICYCLE", "WALK", "HYBRID"],
+          "description": "Primary daily commute mode."
+        },
+        "vehicleEmissionType": {
+          "type": "string",
+          "enum": ["GASOLINE", "DIESEL", "HYBRID", "ELECTRIC", "NONE"],
+          "description": "Primary household vehicle powertrain."
+        },
+        "cookingSetup": {
+          "type": "string",
+          "enum": ["GAS_STOVE", "INDUCTION_ELECTRIC", "WOOD_BIOMASS", "MIXED"],
+          "description": "Primary home cooking stove setup."
+        },
+        "rangeHood": {
+          "type": "string",
+          "enum": ["VENTED_OUTDOORS", "RECIRCULATING", "NONE"],
+          "description": "Kitchen exhaust hood configuration."
+        },
+        "airPurifier": {
+          "type": "string",
+          "enum": ["HEPA_MAIN_ROOMS", "SINGLE_ROOM", "NONE"],
+          "description": "Indoor air filtration setup."
+        },
+        "windowVentilation": {
+          "type": "string",
+          "enum": ["CROSS_VENTILATION", "SINGLE_SIDE", "STREET_FACING", "SEALED_HVAC"],
+          "description": "Home window layout and street exposure."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was last updated."
+        }
+      },
+      "required": [
+        "ownerId",
+        "householdName",
+        "locationLabel",
+        "lat",
+        "lng",
+        "vulnerabilities",
+        "commuteType",
+        "vehicleEmissionType",
+        "cookingSetup",
+        "rangeHood",
+        "airPurifier",
+        "windowVentilation",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "RoomScan": {
+      "title": "RoomScan",
+      "description": "Saved Gemini Vision indoor air quality assessment and 3 actionable low-cost hacks for a scanned room.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the scan owner."
+        },
+        "roomType": {
+          "type": "string",
+          "enum": ["KITCHEN", "BEDROOM", "LIVING_ROOM", "WINDOW_BALCONY", "KIDS_ROOM", "HOME_OFFICE"],
+          "description": "Category of room photographed."
+        },
+        "overallRiskLevel": {
+          "type": "string",
+          "enum": ["LOW", "MODERATE", "ELEVATED", "HIGH"],
+          "description": "Overall IAQ risk classification."
+        },
+        "roomSummary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600,
+          "description": "Concise visual observation of the room."
+        },
+        "outdoorAqiAtScan": {
+          "type": "number",
+          "description": "Outdoor US AQI reading at the time of the scan."
+        },
+        "ventilationAdvice": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600,
+          "description": "Outdoor-aware ventilation recommendation."
+        },
+        "detectedRisks": {
+          "type": "array",
+          "description": "Bounded list (max 6) of identified IAQ hazards."
+        },
+        "hacks": {
+          "type": "array",
+          "description": "Exactly 3 zero-cost or low-cost IAQ improvement hacks."
+        },
+        "completedHackIds": {
+          "type": "array",
+          "description": "Bounded list (max 3) of hack indexes marked complete by the user."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of scan creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "ownerId",
+        "roomType",
+        "overallRiskLevel",
+        "roomSummary",
+        "outdoorAqiAtScan",
+        "ventilationAdvice",
+        "detectedRisks",
+        "hacks",
+        "completedHackIds",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "RoutinePlan": {
+      "title": "RoutinePlan",
+      "description": "User's daily routine schedule, low-emission commute swaps, and quantified personal and community impact.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the plan owner."
+        },
+        "planTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Short label for the routine plan."
+        },
+        "locationLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Neighborhood anchor for this routine."
+        },
+        "swaps": {
+          "type": "array",
+          "description": "Bounded list (max 10) of daily routine swaps with Routes & Places data."
+        },
+        "acceptedSwapIds": {
+          "type": "array",
+          "description": "Bounded list (max 10) of swap IDs adopted by the user."
+        },
+        "personalPm25ReductionPct": {
+          "type": "number",
+          "description": "Estimated percent reduction in inhaled PM2.5 exposure."
+        },
+        "personalPm25UgSaved": {
+          "type": "number",
+          "description": "Estimated micrograms of PM2.5 inhalation avoided per day."
+        },
+        "communityCo2GramsSaved": {
+          "type": "number",
+          "description": "Estimated grams of CO2e tailpipe emissions avoided per day."
+        },
+        "communityNoxMgSaved": {
+          "type": "number",
+          "description": "Estimated milligrams of NOx emissions avoided per day."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of plan creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "ownerId",
+        "planTitle",
+        "locationLabel",
+        "swaps",
+        "acceptedSwapIds",
+        "personalPm25ReductionPct",
+        "personalPm25UgSaved",
+        "communityCo2GramsSaved",
+        "communityNoxMgSaved",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/profile/{profileId}": {
+      "schema": { "$ref": "#/entities/FamilyProfile" },
+      "description": "Private household air quality profile and address coordinates strictly owned by the signed-in user."
+    },
+    "/users/{userId}/roomScans/{scanId}": {
+      "schema": { "$ref": "#/entities/RoomScan" },
+      "description": "User's saved Snap-a-Room IAQ photo scan reports and hack checklists."
+    },
+    "/users/{userId}/routinePlans/{planId}": {
+      "schema": { "$ref": "#/entities/RoutinePlan" },
+      "description": "User's saved Daily Routine & Impact Planner schedules and accepted low-emission swaps."
+    }
+  }
+}
